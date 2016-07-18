@@ -1,7 +1,7 @@
 
 num_choices = 2;
 scale = 0.2;
-num_trials = 100;
+num_trials = 10;
 lower = 0.1;
 upper = 0.9;
 

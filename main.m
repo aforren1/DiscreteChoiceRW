@@ -2,14 +2,14 @@ function output = main(subject_id, tgtfile, fullscreen)
 
     addpath(genpath('Psychoobox'));
     addpath('tgtfiles');
+    tgt = csvread(['tgtfiles/', tgtfile]);
+    block = str2num(regexprep(tgtfile(5:8), '\D', ''));
 
     rand('seed', block);
-    tgt = csvread(tgtfile);
     num_choices = size(tgt, 2);
     num_trials = size(tgt, 1);
     points = 0;
 
-    block = str2num(regexprep(tgtfile(6:8), '\D', ''));
     output = zeros(num_trials, 6 + num_choices);
     output(:, 7:end) = tgt;
     output(:, 1) = subject_id;
@@ -18,52 +18,98 @@ function output = main(subject_id, tgtfile, fullscreen)
     % Set up keyboard
     potential_keys = {{'a', 's', 'd', 'f', 'h', 'j', 'k', 'l'}};
     mykeys = BlamKeyboardResponse(1:num_choices, 'possible_keys', potential_keys);
-
+    potential_keys = potential_keys{1};
     if fullscreen
         rect_size = [];
     else
         rect_size = [30 30 400 400];
     end
+
+    % set up aud cue
+    snd = wavread('beep.wav');
+    snd2 = wavread('smw_coin.wav');
+    aud = PsychAudio('mode', 9);
+    aud.AddSlave(1, 'channels', 2);
+    aud.AddSlave(2, 'channels', 2);
+    aud.FillBuffer([snd snd]', 1);
+    aud.FillBuffer([snd2 snd2]', 2);
+
+
     Screen('Preference', 'Verbosity', 1);
     win = PsychWindow(0, true, 'color', [0 0 0], 'rect', rect_size);
-    points_txt = PsychText('val', ['Points: +', num2str(points)],...
-                           'color', [82 242 50], 'x', 'center', 'y', 'center');
+    pks = cellfun(@(str) sprintf('%s, ', str), mykeys.valid_keys, 'UniformOutput', false);
+    pks = strcat(pks{:});
+    pks = pks(1:end-1);
+    intro_txt = ['Keys are: ', pks];
+    txt = PsychText('val', intro_txt,...
+                           'color', [255 255 255],...
+                           'x', 'center', 'y', 'center', ...
+                           'size', 30);
+    txt.Draw(win.pointer);
+    win.Flip;
+    WaitSecs(2);
+
+    txt_str = ['Points: +', num2str(points), '\n', 'Trial #: ', num2str(0)];
+    txt.Set('val', txt_str, 'color', [78 230 50]);
+    txt.Draw(win.pointer);
+    time_ref = win.Flip;
+
     for nn = 1:num_trials
 
+        aud.Play(0, 1);
         mykeys.StartKeyResponse;
-
+        new_press = [-1 -1];
         while new_press(1) == -1
-            [new_press, press_time] = mykeys.CheckKeyResponse;
+            new_press = mykeys.CheckKeyResponse;
             WaitSecs(0.1);
         end
 
         mykeys.StopKeyResponse;
         KbQueueFlush;
-        output(nn, 3) = new_press;
-        output(nn, 4) = press_time;
+        output(nn, 3) = new_press(1);
+        output(nn, 4) = new_press(2) - time_ref;
 
-        reward = binornd(1, tgt(nn, ind_choice));
+        reward = binornd(1, tgt(nn, new_press(1)));
         output(nn, 5) = reward;
         if reward
-
-        else
-
+            points = points + 10;
+            aud.Play(0, 2);
         end
-
+        txt_str = ['Points: +', num2str(points), '\n', 'Trial #: ', num2str(nn)];
+        txt.Set('val', txt_str);
+        txt.Draw(win.pointer);
+        win.Flip;
+        WaitSecs(0.1);
         output(nn, 6) = points;
     end
 
     mykeys.DeleteKeyResponse;
+
+    txt.Set('val', ['Final Score: ', num2str(points)], 'size', 40);
+    txt.Draw(win.pointer);
+    win.Flip;
+
+    WaitSecs(2);
+
     % write header and data to file
     header = {'id', 'block', 'response', 'time_response', 'reward', 'points'};
     for nn = 1:num_choices
-        header = [header, {['key_', potential_keys{nn}]}];
+        header = [header, ['key_', potential_keys{nn}]];
     end
 
-    header = sprintf('%s,' ,header{:});
-    header = header(1:end-1);
     filename = ['data/id', num2str(subject_id), '_block', num2str(block), '_nchoice', num2str(num_choices), '.csv'];
-    dlmwrite(filename, header);
+
+    fid = fopen(filename, 'wt');
+    csvFun = @(str)sprintf('%s, ', str);
+    xchar = cellfun(csvFun, header, 'UniformOutput', false);
+    xchar2 = strcat(xchar{:});
+    xchar2 = strcat(xchar2(1:end-1), '\n');
+    fprintf(fid, xchar2);
+    fclose(fid);
+
     dlmwrite(filename, output, '-append', 'delimiter', ',', 'precision', '%.3f');
 
+    win.Close;
+    aud.Close;
+    txt.Close;
 end
