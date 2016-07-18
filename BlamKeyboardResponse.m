@@ -53,7 +53,7 @@ classdef BlamKeyboardResponse < handle
                     %press_key = cell2mat(press_key);
                     press_key = press_key{1}; % incorrect, but how to fix?
                 end
-                press_index = obj.valid_indices(find(new_screen_press));
+                press_index = find(not(cellfun('isempty', (strfind(press_key, tolower(obj.valid_keys))))));
                 time_press = min(pressed(pressed > 0));
                 new_press = [press_index, time_press];
             else % no new presses
