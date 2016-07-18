@@ -42,9 +42,9 @@ function output = main(subject_id, tgtfile, fullscreen)
     pks = pks(1:end-1);
     intro_txt = ['Keys are: ', pks];
     txt = PsychText('val', intro_txt,...
-                           'color', [255 255 255],...
-                           'x', 'center', 'y', 'center', ...
-                           'size', 30);
+                    'color', [255 255 255],...
+                    'x', 'center', 'y', 'center', ...
+                    'size', 30);
     txt.Draw(win.pointer);
     win.Flip;
     WaitSecs(2);
@@ -57,14 +57,14 @@ function output = main(subject_id, tgtfile, fullscreen)
     for nn = 1:num_trials
 
         aud.Play(0, 1);
-        mykeys.StartKeyResponse;
+        mykeys.Start;
         new_press = [-1 -1];
         while new_press(1) == -1
-            new_press = mykeys.CheckKeyResponse;
+            new_press = mykeys.Check;
             WaitSecs(0.1);
         end
 
-        mykeys.StopKeyResponse;
+        mykeys.Stop;
         KbQueueFlush;
         output(nn, 3) = new_press(1);
         output(nn, 4) = new_press(2) - time_ref;
@@ -83,7 +83,7 @@ function output = main(subject_id, tgtfile, fullscreen)
         output(nn, 6) = points;
     end
 
-    mykeys.DeleteKeyResponse;
+    mykeys.Close;
 
     txt.Set('val', ['Final Score: ', num2str(points)], 'size', 40);
     txt.Draw(win.pointer);
