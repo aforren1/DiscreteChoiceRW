@@ -17,7 +17,7 @@ function output = main(subject_id, tgtfile, fullscreen)
 
     % Set up keyboard
     potential_keys = {{'a', 's', 'd', 'f', 'h', 'j', 'k', 'l'}};
-    mykeys = BlamKeyboardResponse(1:num_choices, 'possible_keys', potential_keys);
+    mykeys = BlamKeyboard(1:num_choices, 'possible_keys', potential_keys);
     potential_keys = potential_keys{1};
     if fullscreen
         rect_size = [];
@@ -44,14 +44,24 @@ function output = main(subject_id, tgtfile, fullscreen)
     txt = PsychText('val', intro_txt,...
                     'color', [255 255 255],...
                     'x', 'center', 'y', 'center', ...
-                    'size', 30);
+                    'size', 30, ...
+                    'style', 'bold');
     txt.Draw(win.pointer);
+
+
+    % set up cat
+    kitty = imread('cat.jpg');
+    textures = PsychTexture;
+    textures.AddImage(kitty, win.pointer, 1, 'draw_rect', [10 10 266 200]);
+    textures.Draw(win.pointer, 1);
+
     win.Flip;
     WaitSecs(2);
 
     txt_str = ['Points: +', num2str(points), '\n', 'Trial #: ', num2str(0)];
     txt.Set('val', txt_str, 'color', [78 230 50]);
     txt.Draw(win.pointer);
+    textures.Draw(win.pointer, 1);
     time_ref = win.Flip;
 
     for nn = 1:num_trials
@@ -65,7 +75,7 @@ function output = main(subject_id, tgtfile, fullscreen)
         end
 
         mykeys.Stop;
-        KbQueueFlush;
+        mykeys.Flush;
         output(nn, 3) = new_press(1);
         output(nn, 4) = new_press(2) - time_ref;
 
@@ -78,6 +88,7 @@ function output = main(subject_id, tgtfile, fullscreen)
         txt_str = ['Points: +', num2str(points), '\n', 'Trial #: ', num2str(nn)];
         txt.Set('val', txt_str);
         txt.Draw(win.pointer);
+        textures.Draw(win.pointer, 1);
         win.Flip;
         WaitSecs(0.1);
         output(nn, 6) = points;

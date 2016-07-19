@@ -39,6 +39,10 @@ classdef BlamKeyboard < PsychHandle
             KbQueueStop;
         end
 
+        function Flush(self)
+            KbQueueFlush;
+        end
+
         function Close(self)
             KbQueueRelease;
             delete(self);
@@ -59,7 +63,6 @@ classdef BlamKeyboard < PsychHandle
             else % no new presses
                 new_press = [-1, -1];
             end
-            KbQueueFlush;
         end % end CheckKeyResponse
 
     end % end methods

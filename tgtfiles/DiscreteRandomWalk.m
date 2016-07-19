@@ -21,7 +21,7 @@ output = unifrnd(lower, upper, 1, num_choices);
     for ii = 2:num_trials
         for jj = 1:num_choices
             % if the proposal is "out of bounds", reflect the proposal
-            proposal = ((rand(1, 1)- 0.5) * scale);
+            proposal = (randn(1, 1) * scale);
             if (proposal + output((ii - 1), jj)) > upper || ...
                (proposal + output((ii - 1), jj)) < lower
 
