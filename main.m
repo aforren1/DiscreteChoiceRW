@@ -1,5 +1,9 @@
 function output = main(subject_id, tgtfile, fullscreen)
-
+% output = MAIN(subject_id, tgtfile, fullscreen)
+%
+% Example:
+%     output = main(3, 'block1_nchoice4.csv', false);
+%
     addpath(genpath('Psychoobox'));
     addpath('tgtfiles');
     tgt = csvread(['tgtfiles/', tgtfile]);
@@ -71,7 +75,7 @@ function output = main(subject_id, tgtfile, fullscreen)
         new_press = [-1 -1];
         while new_press(1) == -1
             new_press = mykeys.Check;
-            WaitSecs(0.1);
+            WaitSecs(0.4);
         end
 
         mykeys.Stop;
