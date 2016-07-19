@@ -52,7 +52,7 @@ function output = main(subject_id, tgtfile, fullscreen)
     % set up cat
     kitty = imread('cat.jpg');
     textures = PsychTexture;
-    textures.AddImage(kitty, win.pointer, 1, 'draw_rect', [10 10 266 200]);
+    textures.AddImage(kitty, win.pointer, 1, 'draw_rect', [10 10 300 200]);
     textures.Draw(win.pointer, 1);
 
     win.Flip;
