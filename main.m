@@ -75,7 +75,7 @@ function output = main(subject_id, tgtfile, fullscreen)
         new_press = [-1 -1];
         while new_press(1) == -1
             new_press = mykeys.Check;
-            WaitSecs(0.4);
+            WaitSecs(0.1);
         end
 
         mykeys.Stop;
@@ -94,7 +94,7 @@ function output = main(subject_id, tgtfile, fullscreen)
         txt.Draw(win.pointer);
         textures.Draw(win.pointer, 1);
         win.Flip;
-        WaitSecs(0.1);
+        WaitSecs(0.4);
         output(nn, 6) = points;
     end
 
