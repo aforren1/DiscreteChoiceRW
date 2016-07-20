@@ -20,9 +20,9 @@ function output = main(subject_id, tgtfile, fullscreen)
     output(:, 2) = block;
 
     % Set up keyboard
-    potential_keys = {{'a', 's', 'd', 'f', 'h', 'j', 'k', 'l'}};
-    mykeys = BlamKeyboard(1:num_choices, 'possible_keys', potential_keys);
-    potential_keys = potential_keys{1};
+    possible_keys = {{'a', 's', 'd', 'f', 'h', 'j', 'k', 'l'}};
+    mykeys = BlamKeyboard(1:num_choices, 'possible_keys', possible_keys);
+    possible_keys = possible_keys{1};
     if fullscreen
         rect_size = [];
     else
@@ -72,18 +72,18 @@ function output = main(subject_id, tgtfile, fullscreen)
 
         aud.Play(0, 1);
         mykeys.Start;
-        new_press = [-1 -1];
-        while new_press(1) == -1
-            new_press = mykeys.Check;
+        press_time = -1;
+        while press_time == -1
+            [~, press_time, ~, press_array] = mykeys.Check;
             WaitSecs(0.1);
         end
 
         mykeys.Stop;
         mykeys.Flush;
-        output(nn, 3) = new_press(1);
-        output(nn, 4) = new_press(2) - time_ref;
+        output(nn, 3) = find(press_array(end) == 1);
+        output(nn, 4) = press_time(end) - time_ref;
 
-        reward = binornd(1, tgt(nn, new_press(1)));
+        reward = binornd(1, tgt(nn, output(nn, 3)));
         output(nn, 5) = reward;
         if reward
             points = points + 10;
@@ -109,7 +109,7 @@ function output = main(subject_id, tgtfile, fullscreen)
     % write header and data to file
     header = {'id', 'block', 'response', 'time_response', 'reward', 'points'};
     for nn = 1:num_choices
-        header = [header, ['key_', potential_keys{nn}]];
+        header = [header, ['key_', possible_keys{nn}]];
     end
 
     filename = ['data/id', num2str(subject_id), '_block', num2str(block), '_nchoice', num2str(num_choices), '.csv'];

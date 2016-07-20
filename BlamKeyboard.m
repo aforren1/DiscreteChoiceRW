@@ -1,10 +1,8 @@
 classdef BlamKeyboard < PsychHandle
     properties
-        timing_tolerance;
         valid_indices;
         valid_keys;
-        force_min;
-        force_max;
+        valid_keycodes;
         p;
     end
 
@@ -14,20 +12,16 @@ classdef BlamKeyboard < PsychHandle
             self.p.FunctionName = 'BlamKeyboard';
             self.p.addRequired('valid_indices');
             self.p.addParamValue('possible_keys', {{'a','w','e','f','v','b','h','u','i','l'}}, @(x) iscell(x));
-            self.p.addParamValue('timing_tolerance', 0.075, @(x) isnumeric(x));
-            self.p.addParamValue('force_min', 1);
-            self.p.addParamValue('force_max', 100);
             self.p.parse(valid_indices, varargin{:});
 
+            KbName('UnifyKeyNames');
             opts = self.p.Results;
-            self.timing_tolerance = opts.timing_tolerance;
-            self.force_min = opts.force_min;
-            self.force_max = opts.force_max;
             self.valid_keys = opts.possible_keys{1}(valid_indices);
+            self.valid_keycodes = KbName(self.valid_keys);
             self.valid_indices = valid_indices;
 
             keys = zeros(1, 256);
-            keys(KbName(self.valid_keys)) = 1;
+            keys(self.valid_keycodes) = 1;
             KbQueueCreate(-1, keys);
         end
 
@@ -48,21 +42,37 @@ classdef BlamKeyboard < PsychHandle
             delete(self);
         end
 
-        function new_press = Check(self)
-
+        function [press_keycodes, press_times, press_names, press_array, ...
+                  release_keycodes, release_times, release_names, release_array] = Check(self)
+        % Newer presses are pushed on the front, e.g.
+        % the press at index 2 happened before the press at index 1
             [~, pressed, released] = KbQueueCheck;
             if any(pressed > 0)
-                press_key = KbName(find(pressed > 0));
-                if iscell(press_key)
-                    %press_key = cell2mat(press_key);
-                    press_key = press_key{1}; % incorrect, but how to fix?
-                end
-                press_index = find(not(cellfun('isempty', (strfind(press_key, tolower(self.valid_keys))))));
-                time_press = min(pressed(pressed > 0));
-                new_press = [press_index, time_press];
+                % pressed returns a 1x256 vector. Non-zero values represent presses
+                press_keycodes = find(pressed > 0);
+                press_names = KbName(press_keycodes);
+                press_times = pressed(pressed > 0);
+                press_array = find(press_keycodes, self.valid_keycodes);
             else % no new presses
-                new_press = [-1, -1];
+                press_keycodes = -1;
+                press_times = -1;
+                press_names = -1;
+                press_array = -1;
             end
+
+            if any(released > 0)
+                % released returns a 1x256 vector. Non-zero values represent releasees
+                release_keycodes = find(released > 0);
+                release_names = KbName(release_keycodes);
+                release_times = released(released > 0);
+                release_array = find(release_keycodes, self.valid_keycodes);
+            else % no new releasees
+                release_keycodes = -1;
+                release_times = -1;
+                release_names = -1;
+                release_array = -1;
+            end
+
         end % end CheckKeyResponse
 
     end % end methods
