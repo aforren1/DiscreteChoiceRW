@@ -4,6 +4,8 @@ function output = main(subject_id, tgtfile, fullscreen)
 % Example:
 %     output = main(3, 'block1_nchoice4.csv', false);
 %
+% 200 trials/block
+% 2 and 4 choice (and 8 for adrian)
     try
         addpath(genpath('Psychoobox'));
         addpath('tgtfiles');
@@ -51,6 +53,11 @@ function output = main(subject_id, tgtfile, fullscreen)
                         'x', 'center', 'y', 'center', ...
                         'size', 30, ...
                         'style', 'bold');
+        txt_info = PsychText('val', intro_txt,...
+                        'color', [255 255 255],...
+                        'x', 'center', 'y', 20, ...
+                        'size', 20, ...
+                        'style', 'bold');
         txt.Draw(win.pointer);
 
 
@@ -66,6 +73,7 @@ function output = main(subject_id, tgtfile, fullscreen)
         txt_str = ['Points: +', num2str(points), '\n', 'Trial #: ', num2str(0)];
         txt.Set('val', txt_str, 'color', [78 230 50]);
         txt.Draw(win.pointer);
+        txt_info.Draw(win.pointer);
         textures.Draw(win.pointer, 1);
         time_ref = win.Flip;
 
@@ -75,13 +83,13 @@ function output = main(subject_id, tgtfile, fullscreen)
             mykeys.Start;
             press_time = -1;
             while press_time == -1
-                [~, press_time, ~, press_array] = mykeys.Check;
+                [a, press_time, c, press_array] = mykeys.Check;
                 WaitSecs(0.1);
             end
 
             mykeys.Stop;
             mykeys.Flush;
-            output(nn, 3) = find(press_array(end) == 1);
+            output(nn, 3) = press_array;
             output(nn, 4) = press_time(end) - time_ref;
 
             reward = binornd(1, tgt(nn, output(nn, 3)));
@@ -92,6 +100,7 @@ function output = main(subject_id, tgtfile, fullscreen)
             end
             txt_str = ['Points: +', num2str(points), '\n', 'Trial #: ', num2str(nn)];
             txt.Set('val', txt_str);
+            txt_info.Draw(win.pointer);
             txt.Draw(win.pointer);
             textures.Draw(win.pointer, 1);
             win.Flip;

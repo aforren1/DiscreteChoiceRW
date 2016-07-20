@@ -52,7 +52,7 @@ classdef BlamKeyboard < PsychHandle
                 press_keycodes = find(pressed > 0);
                 press_names = KbName(press_keycodes);
                 press_times = pressed(pressed > 0);
-                press_array = find(press_keycodes, self.valid_keycodes);
+                press_array = find(self.valid_keycodes == press_keycodes);
             else % no new presses
                 press_keycodes = -1;
                 press_times = -1;
