@@ -17,10 +17,12 @@ function output = main(subject_id, tgtfile, fullscreen)
         num_trials = size(tgt, 1);
         points = 0;
 
-        output = zeros(num_trials, 6 + num_choices);
-        output(:, 7:end) = tgt;
+        output = zeros(num_trials, 8 + num_choices);
+        output(:, 9:end) = tgt;
         output(:, 1) = subject_id;
         output(:, 2) = block;
+        output(:, 3) = 1:num_trials;
+        output(:, 8) = num_choices;
 
         % Set up keyboard
         possible_keys = {{'a', 's', 'd', 'f', 'h', 'j', 'k', 'l'}};
@@ -89,8 +91,8 @@ function output = main(subject_id, tgtfile, fullscreen)
 
             mykeys.Stop;
             mykeys.Flush;
-            output(nn, 3) = press_array;
-            output(nn, 4) = press_time(end) - time_ref;
+            output(nn, 4) = press_array;
+            output(nn, 5) = press_time(end) - time_ref;
 
             reward = binornd(1, tgt(nn, output(nn, 3)));
             output(nn, 5) = reward;
@@ -117,7 +119,7 @@ function output = main(subject_id, tgtfile, fullscreen)
         WaitSecs(2);
 
         % write header and data to file
-        header = {'id', 'block', 'response', 'time_response', 'reward', 'points'};
+        header = {'id', 'block', 'trial', 'response', 'time_response', 'reward', 'points', 'num_choices'};
         for nn = 1:num_choices
             header = [header, ['key_', possible_keys{nn}]];
         end
