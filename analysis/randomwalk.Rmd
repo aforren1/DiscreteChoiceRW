@@ -1,0 +1,83 @@
+---
+title: "randomwalk"
+author: "Alexander Forrence"
+date: "July 20, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(zoo)
+library(ggplot2)
+```
+
+## Import Data
+
+```{r}
+filenames <- list.files('~/Documents/BLAM/DiscreteChoiceRW/data',
+                        pattern = '*.csv', full.names = TRUE)
+datalist <- list()
+
+for (ii in 1:length(filenames)) {
+  datalist[[ii]] <- read.csv(filenames[ii], header = TRUE)
+}
+
+datalist <- lapply(datalist, function(x) { 
+    nc <- ncol(x[,7:ncol(x)])
+    x$num_choices <- nc
+    new_ncol <- ncol(x)
+    window_size <- 5
+    # calculate prop(choice) for sliding window
+    for(ii in 1:nc) {
+      x[,new_ncol + ii] <- rollapply(x$response, window_size, 
+                                     function(x, val) sum(x == val)/window_size, 
+                                     val = ii, na.pad = TRUE)
+      colnames(x)[new_ncol + ii] <- paste0('prop_', ii)
+      x$trial <- 1:nrow(x)
+    }
+    x$roll_reward <- rollmean(x$reward, window_size, na.pad = TRUE)
+    x
+  })
+
+```
+
+## Quick Exploration
+
+First, we'll do the number of presses per finger per block.
+
+```{r}
+lapply(datalist, function(x) {table(x$response)})
+```
+
+## Switch Policy
+
+Figure out if the subject will stay on the current selection, if the subject won/lost the previous trial, if they stayed after the previous trial, and if they won the current trial.
+```{r switchp}
+
+SwitchPolicy <- function(action_seq, reward_seq) {
+  reward <- reward_seq[2:(length(reward_seq) - 1)]
+  reward_prev <- reward_seq[1:(length(reward_seq) - 2)]
+  
+  stay <- action_seq[2:(length(action_seq) - 1)] ==
+          action_seq[3:length(action_seq)]
+
+  stay_prev <- action_seq[1:(length(action_seq) - 2)] == 
+               action_seq[2:(length(action_seq) - 1)] 
+
+  opts <- expand.grid(win_on_current = c(TRUE, FALSE),
+                      win_previous = c(TRUE, FALSE), 
+                      stay_after_previous = c(TRUE, FALSE))
+  
+  condits <- cbind(reward_prev, stay_prev, reward)
+  
+  res <- matrix(nrow = nrow(condits), ncol = nrow(opts))
+  for(ii in 1:nrow(opts)) {
+    for(jj in 1:nrow(condits)) {
+      res[jj, ii] <- all(condits[jj,] == opts[ii,])
+    }
+  }
+  
+  apply(res, MARGIN = 2, FUN = function(x, stay) list(sum = sum(x), mn = mean(stay[x])), stay = stay)
+}
+
+```

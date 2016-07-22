@@ -122,7 +122,9 @@ function output = main(subject_id, tgtfile, fullscreen)
             header = [header, ['key_', possible_keys{nn}]];
         end
 
-        filename = ['data/id', num2str(subject_id), '_block', num2str(block), '_nchoice', num2str(num_choices), '.csv'];
+	    date_string = datestr(now, 30);
+    	date_string = date_string(3:end - 2);
+        filename = ['data/id', num2str(subject_id), '_block', num2str(block), '_nchoice', num2str(num_choices),'_', date_string, '.csv'];
 
         fid = fopen(filename, 'wt');
         csvFun = @(str)sprintf('%s, ', str);
