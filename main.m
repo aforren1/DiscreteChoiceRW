@@ -83,8 +83,8 @@ function output = main(subject_id, tgtfile, fullscreen)
 
             aud.Play(0, 1);
             mykeys.Start;
-            press_time = -1;
-            while press_time == -1
+            press_time = NaN;
+            while isnan(press_time)
                 [a, press_time, c, press_array] = mykeys.Check;
                 WaitSecs(0.1);
             end
