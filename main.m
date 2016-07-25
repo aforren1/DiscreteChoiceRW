@@ -85,17 +85,17 @@ function output = main(subject_id, tgtfile, fullscreen)
             mykeys.Start;
             press_time = NaN;
             while isnan(press_time)
-                [a, press_time, c, press_array] = mykeys.Check;
+                [~, press_time, ~, press_index] = mykeys.Check;
                 WaitSecs(0.1);
             end
 
             mykeys.Stop;
             mykeys.Flush;
-            output(nn, 4) = press_array;
+            output(nn, 4) = press_index;
             output(nn, 5) = press_time(end) - time_ref;
 
-            reward = binornd(1, tgt(nn, output(nn, 3)));
-            output(nn, 5) = reward;
+            reward = binornd(1, tgt(nn, output(nn, 4)));
+            output(nn, 6) = reward;
             if reward
                 points = points + 10;
                 aud.Play(0, 2);
@@ -107,7 +107,7 @@ function output = main(subject_id, tgtfile, fullscreen)
             textures.Draw(win.pointer, 1);
             win.Flip;
             WaitSecs(0.4);
-            output(nn, 6) = points;
+            output(nn, 7) = points;
         end
 
         mykeys.Close;
@@ -148,5 +148,6 @@ function output = main(subject_id, tgtfile, fullscreen)
         catch ME2
             warning('Audio not in use');
         end
+        rethrow(ME);
     end
 end

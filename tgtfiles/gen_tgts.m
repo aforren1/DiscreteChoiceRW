@@ -1,10 +1,10 @@
 
-num_choices = 8;
+num_choices = 5;
 scale = 0.075;
-num_trials = 200;
+num_trials = 5;
 lower = 0.25;
 upper = 0.75;
-num_blocks = 4 ;
+num_blocks = 1;
 
 for ii = 1:num_blocks
     rand('seed', 100*ii*num_choices);
