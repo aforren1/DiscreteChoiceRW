@@ -85,14 +85,14 @@ function output = main(subject_id, tgtfile, fullscreen)
             mykeys.Start;
             press_time = NaN;
             while isnan(press_time)
-                [~, press_time, ~, press_index] = mykeys.Check;
+                [press_time, ~, press_index] = mykeys.Check;
                 WaitSecs(0.1);
             end
 
             mykeys.Stop;
             mykeys.Flush;
             [press_time, idx] = sort(press_time);
-
+            press_index = find(press_index);
             output(nn, 4) = press_index(idx(1)); % take first press
             output(nn, 5) = press_time(1) - time_ref;
 
