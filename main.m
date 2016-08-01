@@ -91,8 +91,10 @@ function output = main(subject_id, tgtfile, fullscreen)
 
             mykeys.Stop;
             mykeys.Flush;
-            output(nn, 4) = press_index;
-            output(nn, 5) = press_time(end) - time_ref;
+            [press_time, idx] = sort(press_time);
+
+            output(nn, 4) = press_index(idx(1)); % take first press
+            output(nn, 5) = press_time(1) - time_ref;
 
             reward = binornd(1, tgt(nn, output(nn, 4)));
             output(nn, 6) = reward;
