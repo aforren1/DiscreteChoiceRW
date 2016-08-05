@@ -54,7 +54,9 @@ choice2_data <- choice2_data %>%
   mutate(distance = response - lag(response, 1)) %>% 
   mutate(reward = reward == 1) %>% 
   mutate(rew_stayp_rewp = paste(reward, stay_prev, reward_prev, sep = ', ')) %>% 
-  mutate(rew = paste(reward, ''))
+  mutate(rew = paste(reward, '')) %>% 
+  mutate(boomerang = (response == lag(response, 2)) & (response != lag(response, 1)) & lag(reward, 2) & lag(!reward, 1)) %>% 
+  mutate(flyaway = (response != lag(response, 2)) & (response != lag(response, 1)) & lag(reward, 2) & lag(!reward, 1))
 
 
 choice4_data <- choice4_data %>% 
@@ -86,7 +88,9 @@ choice4_data <- choice4_data %>%
   mutate(distance = response - lag(response, 1)) %>% 
   mutate(reward = reward == 1) %>% 
   mutate(rew_stayp_rewp = paste(reward, stay_prev, reward_prev, sep = ', ')) %>% 
-  mutate(rew = paste(reward, ''))
+  mutate(rew = paste(reward, '')) %>% 
+  mutate(boomerang = (response == lag(response, 2)) & (response != lag(response, 1)) & lag(reward, 2) & lag(!reward, 1)) %>% 
+  mutate(flyaway = (response != lag(response, 2)) & (response != lag(response, 1)) & lag(reward, 2) & lag(!reward, 1))
 ```
 
 ## First-order
