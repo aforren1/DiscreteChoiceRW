@@ -53,7 +53,8 @@ choice2_data <- choice2_data %>%
   mutate(stay_prev = lag(stay, 1)) %>% 
   mutate(distance = response - lag(response, 1)) %>% 
   mutate(reward = reward == 1) %>% 
-  mutate(rew_stayp_rewp = paste(reward, stay_prev, reward_prev, sep = ', '))
+  mutate(rew_stayp_rewp = paste(reward, stay_prev, reward_prev, sep = ', ')) %>% 
+  mutate(rew = paste(reward, ''))
 
 
 choice4_data <- choice4_data %>% 
@@ -84,8 +85,64 @@ choice4_data <- choice4_data %>%
   mutate(stay_prev = lag(stay, 1)) %>% 
   mutate(distance = response - lag(response, 1)) %>% 
   mutate(reward = reward == 1) %>% 
-  mutate(rew_stayp_rewp = paste(reward, stay_prev, reward_prev, sep = ', '))
+  mutate(rew_stayp_rewp = paste(reward, stay_prev, reward_prev, sep = ', ')) %>% 
+  mutate(rew = paste(reward, ''))
 ```
+
+## First-order
+
+```{r}
+pop_2 <- choice2_data %>% 
+  group_by(rew) %>% 
+  summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
+  mutate(type = '2choice')
+
+pop_4 <- choice4_data %>% 
+  group_by(rew) %>% 
+  summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
+  mutate(type = '4choice')
+
+split_2 <- choice2_data %>% 
+  group_by(id, block, rew) %>% 
+  summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
+  mutate(type = '2choice')
+
+split_4 <- choice4_data %>% 
+  group_by(id, block, rew) %>% 
+  summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
+  mutate(type = '4choice')
+
+```
+
+```{r}
+pop_data <- rbind(pop_2, pop_4)
+split_data <- rbind(split_2, split_4)
+
+ggplot(pop_data, aes(x = rew, y = prob_stay, size = n, colour = type)) +
+  geom_point(alpha = .6) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  labs(x = 'Reward', 
+       y = 'Probability of staying', 
+       title = 'Population averages') + ylim(c(0,1))
+
+ggplot(filter(split_data, type == '2choice'), aes(x = rew, y = prob_stay, size = n, colour = factor(id))) +
+  geom_point(alpha = .6) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  labs(x = 'Reward', 
+       y = 'Probability of staying', 
+       title = 'Split, 2 choice')+ ylim(c(0,1))
+  
+ggplot(filter(split_data, type == '4choice'), aes(x = rew, y = prob_stay, size = n, colour = factor(id))) +
+  geom_point(alpha = .6) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  labs(x = 'Reward', 
+       y = 'Probability of staying', 
+       title = 'Split, 4 choice')+ ylim(c(0,1))
+
+
+```
+
+## Second-order
 
 ```{r summaries}
 pop_2 <- choice2_data %>% 
@@ -109,7 +166,6 @@ split_4 <- choice4_data %>%
   mutate(type = '4choice')
 ```
 
-## Plots, summaries
 
 ```{r}
 pop_data <- rbind(pop_2, pop_4)
@@ -120,26 +176,26 @@ ggplot(pop_data, aes(x = rew_stayp_rewp, y = prob_stay, size = n, colour = type)
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   labs(x = 'Reward - stay previous - reward previous', 
        y = 'Probability of staying', 
-       title = 'Population averages')
+       title = 'Population averages')+ ylim(c(0,1))
 
 ggplot(filter(split_data, type == '2choice'), aes(x = rew_stayp_rewp, y = prob_stay, size = n, colour = factor(id))) +
   geom_point(alpha = .6) +
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   labs(x = 'Reward - stay previous - reward previous', 
        y = 'Probability of staying', 
-       title = 'Split, 2 choice')
+       title = 'Split, 2 choice')+ ylim(c(0,1))
   
 ggplot(filter(split_data, type == '4choice'), aes(x = rew_stayp_rewp, y = prob_stay, size = n, colour = factor(id))) +
   geom_point(alpha = .6) +
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   labs(x = 'Reward - stay previous - reward previous', 
        y = 'Probability of staying', 
-       title = 'Split, 4 choice')
+       title = 'Split, 4 choice')+ ylim(c(0,1))
 ```
 
 
 ## Probability of returning to original choice, given previous n failed
-`Choice_n = val ~ choice_n-1(wrong) & choice_n-2(wrong)` 
+`Choice_n = choice_n-2 ~ choice_n-1(wrong) & choice_n-2(right)` 
 
 ## Spatial correlation
 
