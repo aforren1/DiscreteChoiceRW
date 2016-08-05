@@ -14,7 +14,7 @@ library(ggplot2)
 ## Import Data
 
 ```{r}
-filenames <- list.files('~/Documents/BLAM/DiscreteChoiceRW/data',
+filenames <- list.files('~/Documents/BLAM/discretechoicerw/data',
                         pattern = '*.csv', full.names = TRUE)
 datalist <- list()
 

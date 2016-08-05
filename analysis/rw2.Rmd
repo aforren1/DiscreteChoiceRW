@@ -1,0 +1,155 @@
+---
+title: "Sequential Choice"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(zoo)
+```
+
+## Intro
+
+```{r import}
+choice2 <- list.files('~/Documents/BLAM/discretechoicerw/data',
+                            pattern = 'choice2', full.names = TRUE)
+choice4 <- list.files('~/Documents/BLAM/discretechoicerw/data',
+                            pattern = 'choice4', full.names = TRUE)
+choice2_data <- list()
+choice4_data <- list()
+for (ii in 1:length(choice2)) {
+  choice2_data[[ii]] <- read.csv(choice2[ii], header = TRUE)
+}
+
+for (ii in 1:length(choice4)) {
+  choice4_data[[ii]] <- read.csv(choice4[ii], header = TRUE)
+}
+
+choice2_data <- do.call(rbind, choice2_data)
+choice4_data <- do.call(rbind, choice4_data)
+```
+
+```{r manip}
+window_size <- 5
+tmpfun <- function(x, ws, val) sum(x == val)/ws
+choice2_data <- choice2_data %>% 
+  group_by(id, block) %>% 
+  mutate(roll_reward = rollmean(reward, window_size, fill = NA)) %>% 
+  mutate(prop_1 = rollapply(response, width = window_size, 
+                            tmpfun,
+                            ws = window_size, 
+                            val = 1,
+                            fill = NA)) %>% 
+  mutate(prop_2 = rollapply(response, width = window_size, 
+                            tmpfun, 
+                            ws = window_size, 
+                            val = 2,
+                            fill = NA)) %>% 
+  mutate(reward_prev = lag(reward, 1) == 1) %>% 
+  mutate(stay = response == lead(response, 1)) %>% 
+  mutate(stay_prev = lag(stay, 1)) %>% 
+  mutate(distance = response - lag(response, 1)) %>% 
+  mutate(reward = reward == 1) %>% 
+  mutate(rew_stayp_rewp = paste(reward, stay_prev, reward_prev, sep = ', '))
+
+
+choice4_data <- choice4_data %>% 
+  group_by(id, block) %>% 
+  mutate(roll_reward = rollmean(reward, window_size, fill = NA)) %>% 
+  mutate(prop_1 = rollapply(response, width = window_size, 
+                            tmpfun,
+                            ws = window_size, 
+                            val = 1,
+                            fill = NA)) %>% 
+  mutate(prop_2 = rollapply(response, width = window_size, 
+                            tmpfun, 
+                            ws = window_size, 
+                            val = 2,
+                            fill = NA)) %>% 
+  mutate(prop_3 = rollapply(response, width = window_size, 
+                          tmpfun, 
+                          ws = window_size, 
+                          val = 3,
+                          fill = NA)) %>% 
+  mutate(prop_4 = rollapply(response, width = window_size, 
+                          tmpfun, 
+                          ws = window_size, 
+                          val = 4,
+                          fill = NA)) %>% 
+  mutate(reward_prev = lag(reward, 1) == 1) %>% 
+  mutate(stay = response == lead(response, 1)) %>% 
+  mutate(stay_prev = lag(stay, 1)) %>% 
+  mutate(distance = response - lag(response, 1)) %>% 
+  mutate(reward = reward == 1) %>% 
+  mutate(rew_stayp_rewp = paste(reward, stay_prev, reward_prev, sep = ', '))
+```
+
+```{r summaries}
+pop_2 <- choice2_data %>% 
+  group_by(rew_stayp_rewp) %>% 
+  summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
+  mutate(type = '2choice')
+
+pop_4 <- choice4_data %>% 
+  group_by(rew_stayp_rewp) %>% 
+  summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
+  mutate(type = '4choice')
+
+split_2 <- choice2_data %>% 
+  group_by(id, block, rew_stayp_rewp) %>% 
+  summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
+  mutate(type = '2choice')
+
+split_4 <- choice4_data %>% 
+  group_by(id, block, rew_stayp_rewp) %>% 
+  summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
+  mutate(type = '4choice')
+```
+
+## Plots, summaries
+
+```{r}
+pop_data <- rbind(pop_2, pop_4)
+split_data <- rbind(split_2, split_4)
+
+ggplot(pop_data, aes(x = rew_stayp_rewp, y = prob_stay, size = n, colour = type)) +
+  geom_point(alpha = .6) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  labs(x = 'Reward - stay previous - reward previous', 
+       y = 'Probability of staying', 
+       title = 'Population averages')
+
+ggplot(filter(split_data, type == '2choice'), aes(x = rew_stayp_rewp, y = prob_stay, size = n, colour = factor(id))) +
+  geom_point(alpha = .6) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  labs(x = 'Reward - stay previous - reward previous', 
+       y = 'Probability of staying', 
+       title = 'Split, 2 choice')
+  
+ggplot(filter(split_data, type == '4choice'), aes(x = rew_stayp_rewp, y = prob_stay, size = n, colour = factor(id))) +
+  geom_point(alpha = .6) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  labs(x = 'Reward - stay previous - reward previous', 
+       y = 'Probability of staying', 
+       title = 'Split, 4 choice')
+```
+
+
+## Probability of returning to original choice, given previous n failed
+`Choice_n = val ~ choice_n-1(wrong) & choice_n-2(wrong)` 
+
+## Spatial correlation
+
+```{r}
+spat_4 <- choice4_data %>% group_by(id, response) %>% count(distance) %>% 
+  mutate(resp_str = paste('response', response)) %>% 
+  na.omit() %>% 
+  filter(distance != 0)
+ggplot(spat_4, aes(x = distance, y = n, fill = factor(id))) + 
+  geom_bar(stat = 'identity', alpha = .7) + 
+  facet_wrap(~resp_str)
+
+```
