@@ -12,7 +12,7 @@ library(zoo)
 ```
 
 ## Intro
-
+This is text
 ```{r import}
 choice2 <- list.files('~/Documents/BLAM/discretechoicerw/data',
                             pattern = 'choice2', full.names = TRUE)
@@ -116,6 +116,7 @@ split_4 <- choice4_data %>%
   summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
   mutate(type = '4choice')
 
+# ggplot(aa, aes(x = stay_prev, y = reward_prev, label = round(prob_stay, 3))) + geom_point(aes(colour = prob_stay, size = prob_stay), show.legend = FALSE) + scale_colour_gradient(low = 'black', high = '#66ff99')+ facet_wrap(~reward) + scale_radius(range = c(0, 40)) +  geom_point(size = 40, alpha = 0.2) + theme_bw() + geom_text(nudge_y = 0.3) + xlab('Stay On Previous Trial') + ylab('Reward On Previous Trial') + ggtitle('Probability of Staying') + labs(subtitle = 'why no text????')
 ```
 
 ```{r}
