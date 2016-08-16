@@ -161,12 +161,12 @@ pop_4 <- choice4_data %>%
   mutate(type = '4choice')
 
 split_2 <- choice2_data %>% 
-  group_by(id, block, rew_stayp_rewp) %>% 
+  group_by(id, rew_stayp_rewp) %>% 
   summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
   mutate(type = '2choice')
 
 split_4 <- choice4_data %>% 
-  group_by(id, block, rew_stayp_rewp) %>% 
+  group_by(id, rew_stayp_rewp) %>% 
   summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
   mutate(type = '4choice')
 ```
