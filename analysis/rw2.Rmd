@@ -1,10 +1,10 @@
 ---
 title: "Sequential Choice"
-output: html_document
+output: ioslides_presentation
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.width = 8, fig.height = 6)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -12,7 +12,7 @@ library(zoo)
 ```
 
 ## Intro
-This is text
+
 ```{r import}
 choice2 <- list.files('~/Documents/BLAM/discretechoicerw/data',
                             pattern = 'choice2', full.names = TRUE)
@@ -93,6 +93,15 @@ choice4_data <- choice4_data %>%
   mutate(flyaway = (response != lag(response, 2)) & (response != lag(response, 1)) & lag(reward, 2) & lag(!reward, 1))
 ```
 
+## Reward Wanderlust
+
+```{r}
+ggplot(choice2_data, aes(x = trial, y = key_a)) +
+  geom_line(color = '#E69F00') + 
+  geom_line(aes(y = key_s), color = '#56B4E9') +
+  facet_wrap(~block) + ylim(c(0,1))
+```
+
 ## First-order
 
 ```{r}
@@ -116,27 +125,35 @@ split_4 <- choice4_data %>%
   summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
   mutate(type = '4choice')
 
-# ggplot(aa, aes(x = stay_prev, y = reward_prev, label = round(prob_stay, 3))) + geom_point(aes(colour = prob_stay, size = prob_stay), show.legend = FALSE) + scale_colour_gradient(low = 'black', high = '#66ff99')+ facet_wrap(~reward) + scale_radius(range = c(0, 40)) +  geom_point(size = 40, alpha = 0.2) + theme_bw() + geom_text(nudge_y = 0.3) + xlab('Stay On Previous Trial') + ylab('Reward On Previous Trial') + ggtitle('Probability of Staying') + labs(subtitle = 'why no text????')
+# 
 ```
 
 ```{r}
 pop_data <- rbind(pop_2, pop_4)
 split_data <- rbind(split_2, split_4)
-
+```
+## Lumped together
+```{r}
 ggplot(pop_data, aes(x = rew, y = prob_stay, size = n, colour = type)) +
   geom_point(alpha = .6) +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   labs(x = 'Reward', 
        y = 'Probability of staying', 
        title = 'Population averages') + ylim(c(0,1))
+```
 
+## Split (2 choice)
+```{r}
 ggplot(filter(split_data, type == '2choice'), aes(x = rew, y = prob_stay, size = n, colour = factor(id))) +
   geom_point(alpha = .6) +
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   labs(x = 'Reward', 
        y = 'Probability of staying', 
        title = 'Split, 2 choice')+ ylim(c(0,1))
-  
+```
+
+## Split (4 choice) 
+```{r}
 ggplot(filter(split_data, type == '4choice'), aes(x = rew, y = prob_stay, size = n, colour = factor(id))) +
   geom_point(alpha = .6) +
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
@@ -148,6 +165,41 @@ ggplot(filter(split_data, type == '4choice'), aes(x = rew, y = prob_stay, size =
 ```
 
 ## Second-order
+```{r bubbles}
+choice2_bubbles <- choice2_data  %>% 
+  group_by(reward, stay_prev, reward_prev) %>% 
+  summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
+  mutate(type = '2choice')
+choice4_bubbles <- choice4_data  %>% 
+  group_by(reward, stay_prev, reward_prev) %>% 
+  summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
+  mutate(type = '4choice')
+ggplot(choice2_bubbles, aes(x = stay_prev, y = reward_prev, label = round(prob_stay, 3))) + 
+  geom_point(aes(colour = prob_stay, size = prob_stay), show.legend = FALSE) + 
+  scale_colour_gradient(low = 'black', high = '#66ff99')+ 
+  facet_wrap(~reward) + scale_radius(range = c(0, 40)) + 
+  geom_point(size = 40, alpha = 0.2) + theme_bw() +
+  geom_text(nudge_y = 0.3) + 
+  xlab('Stay On Previous Trial') + 
+  ylab('Reward On Previous Trial') + 
+  ggtitle('Probability of Staying (2 Choice)') + labs(subtitle = 'Reward on Current Trial') +
+  theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
+```
+
+## 4 choice
+```{r}
+
+ggplot(choice4_bubbles, aes(x = stay_prev, y = reward_prev, label = round(prob_stay, 3))) + 
+  geom_point(aes(colour = prob_stay, size = prob_stay), show.legend = FALSE) + 
+  scale_colour_gradient(low = 'black', high = '#66ff99')+ 
+  facet_wrap(~reward) + scale_radius(range = c(0, 40)) + 
+  geom_point(size = 40, alpha = 0.2) + theme_bw() +
+  geom_text(nudge_y = 0.3) + 
+  xlab('Stay On Previous Trial') + 
+  ylab('Reward On Previous Trial') + 
+    ggtitle('Probability of Staying (4 Choice)') + labs(subtitle = 'Reward on Current Trial') +
+  theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
+```
 
 ```{r summaries}
 pop_2 <- choice2_data %>% 
@@ -161,17 +213,17 @@ pop_4 <- choice4_data %>%
   mutate(type = '4choice')
 
 split_2 <- choice2_data %>% 
-  group_by(id, rew_stayp_rewp) %>% 
+  group_by(id, rew_stayp_rewp, block) %>% 
   summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
   mutate(type = '2choice')
 
 split_4 <- choice4_data %>% 
-  group_by(id, rew_stayp_rewp) %>% 
+  group_by(id, rew_stayp_rewp, block) %>% 
   summarize(n = n(), prob_stay = sum(stay, na.rm = TRUE)/n()) %>% 
   mutate(type = '4choice')
 ```
 
-
+## Another way
 ```{r}
 pop_data <- rbind(pop_2, pop_4)
 split_data <- rbind(split_2, split_4)
@@ -182,14 +234,20 @@ ggplot(pop_data, aes(x = rew_stayp_rewp, y = prob_stay, size = n, colour = type)
   labs(x = 'Reward - stay previous - reward previous', 
        y = 'Probability of staying', 
        title = 'Population averages')+ ylim(c(0,1))
+```
 
+## Split up
+```{r}
 ggplot(filter(split_data, type == '2choice'), aes(x = rew_stayp_rewp, y = prob_stay, size = n, colour = factor(id))) +
   geom_point(alpha = .6) +
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   labs(x = 'Reward - stay previous - reward previous', 
        y = 'Probability of staying', 
        title = 'Split, 2 choice')+ ylim(c(0,1))
-  
+```
+
+## Split, cont.
+```{r}
 ggplot(filter(split_data, type == '4choice'), aes(x = rew_stayp_rewp, y = prob_stay, size = n, colour = factor(id))) +
   geom_point(alpha = .6) +
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
@@ -197,10 +255,6 @@ ggplot(filter(split_data, type == '4choice'), aes(x = rew_stayp_rewp, y = prob_s
        y = 'Probability of staying', 
        title = 'Split, 4 choice')+ ylim(c(0,1))
 ```
-
-
-## Probability of returning to original choice, given previous n failed
-`Choice_n = choice_n-2 ~ choice_n-1(wrong) & choice_n-2(right)` 
 
 ## Spatial correlation
 
